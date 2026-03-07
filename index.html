@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base44 Style Dashboard | Real-time</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #111827;
+            --main-bg: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--main-bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR (Identik Base44) */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-link {
+            padding: 12px 16px;
+            color: var(--text-dim);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .nav-link.active {
+            background: #1f2937;
+            color: var(--accent);
+        }
+
+        .nav-link:hover:not(.active) {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .device-info h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: -0.025em;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1e293b;
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        /* CARDS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .card-title {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .card-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .unit {
+            font-size: 1rem;
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        /* CHART */
+        .chart-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">⚡ PowerSystem</div>
+        <nav>
+            <a href="#" class="nav-link">Overview</a>
+            <a href="#" class="nav-link active">Devices</a>
+            <a href="#" class="nav-link">Integrations</a>
+            <a href="#" class="nav-link">Settings</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="device-info">
+                <h1>Device: ESP32-PZEM-V3</h1>
+                <p style="color: var(--text-dim);">Live monitoring via EMQX Cloud</p>
+            </div>
+            <div class="status-badge">
+                <span id="status-dot" class="dot"></span>
+                <span id="status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="card">
+                <div class="card-title">Voltage</div>
+                <div class="card-value"><span id="v">0.0</span> <span class="unit">V</span></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Current</div>
+                <div class="card-value" style="color: #fbbf24;"><span id="i">0.00</span> <span class="unit">A</span></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Power Usage</div>
+                <div class="card-value" style="color: #10b981;"><span id="p">0.0</span> <span class="unit">W</span></div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="card-title" style="margin-bottom: 20px;">Real-time Voltage History</div>
+            <canvas id="voltageChart" height="100"></canvas>
+        </div>
+    </main>
+
+    <script>
+        // --- KONFIGURASI EMQX LO ---
+        const host = 'wss://h0711ef0.ala.eu-central-1.emqxsl.com:8084/mqtt';
+        const options = {
+            username: 'salmon', // GANTI DENGAN USER AUTH EMQX
+            password: 'salmon123', // GANTI DENGAN PASS AUTH EMQX
+            clientId: 'Web_Base44_Clone_' + Math.random().toString(16).substr(2, 8)
+        };
+
+        const client = mqtt.connect(host, options);
+
+        // CHART CONFIG (Chart.js)
+        const ctx = document.getElementById('voltageChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [{
+                    label: 'Voltage',
+                    data: Array(20).fill(null),
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                    x: { display: false }
+                }
+            }
+        });
+
+        client.on('connect', () => {
+            document.getElementById('status-dot').classList.add('online');
+            document.getElementById('status-text').innerText = 'Connected';
+            client.subscribe('pzem/realtime');
+        });
+
+        client.on('message', (topic, message) => {
+            try {
+                const data = JSON.parse(message.toString());
+                
+                // Update Angka
+                document.getElementById('v').innerText = data.v.toFixed(1);
+                document.getElementById('i').innerText = data.i.toFixed(2);
+                document.getElementById('p').innerText = data.p.toFixed(1);
+
+                // Update Grafik
+                chart.data.datasets[0].data.push(data.v);
+                chart.data.datasets[0].data.shift();
+                chart.update('none'); // Update tanpa animasi agar ringan
+            } catch (e) {
+                console.error("JSON Error:", e);
+            }
+        });
+
+        client.on('close', () => {
+            document.getElementById('status-dot').classList.remove('online');
+            document.getElementById('status-text').innerText = 'Disconnected';
+        });
+    </script>
+</body>
+</html>
