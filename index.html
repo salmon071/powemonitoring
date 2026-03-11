@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base44 Style Dashboard | Real-time Power</title>
+    <title>PowerSystem | Mobile Fixed</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,17 +18,19 @@
             --border: #334155;
         }
 
+        /* RESET & BASE */
+        * { box-sizing: border-box; }
+        
         body {
             font-family: 'Inter', sans-serif;
             background: var(--main-bg);
             color: var(--text-main);
             margin: 0;
             display: flex;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh; /* Pakai min-height biar bisa memanjang */
         }
 
-        /* SIDEBAR */
+        /* SIDEBAR DESKTOP */
         .sidebar {
             width: 260px;
             background: var(--sidebar-bg);
@@ -36,6 +38,7 @@
             display: flex;
             flex-direction: column;
             padding: 24px;
+            flex-shrink: 0;
         }
 
         .logo {
@@ -48,45 +51,34 @@
             gap: 10px;
         }
 
+        nav { display: flex; flex-direction: column; gap: 8px; }
+
         .nav-link {
             padding: 12px 16px;
             color: var(--text-dim);
             text-decoration: none;
             border-radius: 8px;
-            margin-bottom: 4px;
             font-weight: 500;
             transition: 0.2s;
         }
 
-        .nav-link.active {
-            background: #1f2937;
-            color: var(--accent);
-        }
-
-        .nav-link:hover:not(.active) {
-            background: rgba(255,255,255,0.05);
-            color: white;
-        }
+        .nav-link.active { background: #1f2937; color: var(--accent); }
 
         /* MAIN CONTENT */
         .main-content {
             flex: 1;
             padding: 40px;
-            overflow-y: auto;
+            width: 100%;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             margin-bottom: 32px;
         }
 
-        .device-info h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            letter-spacing: -0.025em;
-        }
+        .device-info h1 { margin: 0; font-size: 1.6rem; }
 
         .status-badge {
             display: flex;
@@ -95,23 +87,14 @@
             background: #1e293b;
             padding: 6px 14px;
             border-radius: 99px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border: 1px solid var(--border);
         }
 
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ef4444;
-        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+        .dot.online { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
 
-        .dot.online {
-            background: #22c55e;
-            box-shadow: 0 0 10px #22c55e;
-        }
-
-        /* CARDS GRID */
+        /* GRID */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -124,42 +107,73 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 20px;
-            transition: transform 0.2s;
+            text-align: center;
         }
 
-        .card:hover {
-            transform: translateY(-2px);
-        }
+        .card-title { color: var(--text-dim); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-bottom: 12px; }
+        .card-value { font-size: 1.8rem; font-weight: 700; display: flex; align-items: baseline; justify-content: center; gap: 6px; }
+        .unit { font-size: 0.9rem; color: var(--text-dim); font-weight: 400; }
 
-        .card-title {
-            color: var(--text-dim);
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
-        }
-
-        .card-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-        }
-
-        .unit {
-            font-size: 0.9rem;
-            color: var(--text-dim);
-            font-weight: 400;
-        }
-
-        /* CHART */
         .chart-section {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px;
+            height: 300px;
+            position: relative;
+        }
+
+        /* --- FIX MOBILE (BERDASARKAN SCREENSHOT) --- */
+        @media (max-width: 768px) {
+            body { 
+                flex-direction: column; 
+                height: auto; /* Lepas kunci height */
+                overflow-y: auto; 
+            }
+
+            .sidebar { 
+                width: 100%; 
+                padding: 20px; 
+                border-right: none; 
+                border-bottom: 1px solid var(--border);
+                position: relative;
+            }
+
+            .logo { margin-bottom: 15px; }
+
+            /* Navigasi horizontal yang rapi */
+            nav { 
+                flex-direction: row; 
+                overflow-x: auto; 
+                gap: 10px;
+                padding-bottom: 5px;
+                scrollbar-width: none;
+            }
+            nav::-webkit-scrollbar { display: none; }
+
+            .nav-link { 
+                padding: 10px 15px; 
+                font-size: 0.85rem; 
+                white-space: nowrap; 
+                background: rgba(255,255,255,0.03);
+            }
+
+            .main-content { padding: 20px; }
+
+            .header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 15px; 
+                text-align: left;
+            }
+
+            .stats-grid { 
+                grid-template-columns: 1fr; /* 1 kolom di HP biar lega */
+                gap: 15px; 
+            }
+
+            .card-value { font-size: 2rem; }
+            .chart-section { height: 250px; }
         }
     </style>
 </head>
@@ -168,8 +182,8 @@
     <aside class="sidebar">
         <div class="logo">⚡ PowerSystem</div>
         <nav>
-            <a href="#" class="nav-link">Overview</a>
-            <a href="#" class="nav-link active">Devices</a>
+            <a href="#" class="nav-link active">Overview</a>
+            <a href="#" class="nav-link">Devices</a>
             <a href="#" class="nav-link">Integrations</a>
             <a href="#" class="nav-link">Settings</a>
         </nav>
@@ -179,7 +193,7 @@
         <header class="header">
             <div class="device-info">
                 <h1>Device: ESP32-PZEM-V3</h1>
-                <p style="color: var(--text-dim);">Live monitoring via EMQX Cloud</p>
+                <p style="color: var(--text-dim); margin-top: 5px;">Live via EMQX Cloud</p>
             </div>
             <div class="status-badge">
                 <span id="status-dot" class="dot"></span>
@@ -193,48 +207,47 @@
                 <div class="card-value"><span id="v">0.0</span> <span class="unit">V</span></div>
             </div>
             <div class="card">
-                <div class="card-title">Current</div>
+                <div class="card-title" style="color: #fbbf24;">Current</div>
                 <div class="card-value" style="color: #fbbf24;"><span id="i">0.00</span> <span class="unit">A</span></div>
             </div>
             <div class="card">
-                <div class="card-title">Power Usage</div>
+                <div class="card-title" style="color: #10b981;">Power</div>
                 <div class="card-value" style="color: #10b981;"><span id="p">0.0</span> <span class="unit">W</span></div>
             </div>
             <div class="card">
-                <div class="card-title">Frequency</div>
+                <div class="card-title" style="color: #a855f7;">Frequency</div>
                 <div class="card-value" style="color: #a855f7;"><span id="f">0.0</span> <span class="unit">Hz</span></div>
             </div>
             <div class="card">
-                <div class="card-title">Power Factor</div>
+                <div class="card-title" style="color: #6366f1;">Power Factor</div>
                 <div class="card-value" style="color: #6366f1;"><span id="pf">0.00</span> <span class="unit">PF</span></div>
             </div>
         </div>
 
         <div class="chart-section">
-            <div class="card-title" style="margin-bottom: 20px;">Real-time Voltage History</div>
-            <canvas id="voltageChart" height="80"></canvas>
+            <div class="card-title">Voltage History</div>
+            <canvas id="voltageChart"></canvas>
         </div>
     </main>
 
     <script>
-        // --- KONFIGURASI MQTT ---
+        // --- MQTT CONFIG ---
         const host = 'wss://na1f1916.ala.asia-southeast1.emqxsl.com:8084/mqtt';
         const options = {
             username: 'salmon', 
             password: 'salmon123', 
-            clientId: 'Web_Monitoring_' + Math.random().toString(16).substr(2, 8)
+            clientId: 'Web_Monitor_' + Math.random().toString(16).substr(2, 6)
         };
 
         const client = mqtt.connect(host, options);
 
-        // CHART CONFIG
+        // --- CHART ---
         const ctx = document.getElementById('voltageChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: Array(20).fill(''),
                 datasets: [{
-                    label: 'Voltage',
                     data: Array(20).fill(null),
                     borderColor: '#38bdf8',
                     backgroundColor: 'rgba(56, 189, 248, 0.1)',
@@ -246,7 +259,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
                     y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
@@ -264,30 +277,17 @@
         client.on('message', (topic, message) => {
             try {
                 const data = JSON.parse(message.toString());
-                
-                // Update Angka Dasar
-                if(data.v !== undefined) document.getElementById('v').innerText = data.v.toFixed(1);
-                if(data.i !== undefined) document.getElementById('i').innerText = data.i.toFixed(2);
-                if(data.p !== undefined) document.getElementById('p').innerText = data.p.toFixed(1);
-
-                // Update Frequency & Power Factor
-                if(data.f !== undefined) document.getElementById('f').innerText = data.f.toFixed(1);
-                if(data.pf !== undefined) document.getElementById('pf').innerText = data.pf.toFixed(2);
-
-                // Update Grafik
                 if(data.v !== undefined) {
+                    document.getElementById('v').innerText = data.v.toFixed(1);
                     chart.data.datasets[0].data.push(data.v);
                     chart.data.datasets[0].data.shift();
                     chart.update('none');
                 }
-            } catch (e) {
-                console.error("JSON Error:", e);
-            }
-        });
-
-        client.on('close', () => {
-            document.getElementById('status-dot').classList.remove('online');
-            document.getElementById('status-text').innerText = 'Disconnected';
+                if(data.i !== undefined) document.getElementById('i').innerText = data.i.toFixed(2);
+                if(data.p !== undefined) document.getElementById('p').innerText = data.p.toFixed(1);
+                if(data.f !== undefined) document.getElementById('f').innerText = data.f.toFixed(1);
+                if(data.pf !== undefined) document.getElementById('pf').innerText = data.pf.toFixed(2);
+            } catch (e) { console.error(e); }
         });
     </script>
 </body>
